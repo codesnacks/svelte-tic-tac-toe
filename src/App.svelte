@@ -26,7 +26,18 @@
     font-size: 54px;
     color: #000;
   }
+
+  :global(button) {
+    padding: 8px 12px;
+    border-radius: 4px;
+    color: #fff;
+    background: #6495ed;
+    font-weight: bold;
+  }
+
+  :global(button):hover {
+    background: #000;
+  }
 </style>
 
-<h1>Hello {name}!</h1>
 <Board />
