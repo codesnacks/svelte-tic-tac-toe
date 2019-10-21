@@ -188,14 +188,136 @@ To show whose turn it is, we'll add a headline to the markup, that contains the 
 </h1>
 ```
 
-TODO reflect board in markup
+Let's now get to the fun part of actually writing the symbol of the player to the board and alternating between the players.
 
-Let's now get to the fun part of actually writing the symbol of the player to the board and alternating between the players:
+To make this work, we first need to adjust the square to actually reflect the state of the `board` variable:
 
 ```svelte
+<div class="row">
+  <button class="square" on:click={() => handleClick(0)}>
+    {!!board[0] ? board[0] : ''}
+  </button>
+  <button class="square" on:click={() => handleClick(1)}>
+    {!!board[1] ? board[1] : ''}
+  </button>
+  <button class="square" on:click={() => handleClick(2)}>
+    {!!board[2] ? board[2] : ''}
+  </button>
+</div>
+<div class="row">
+  <button class="square" on:click={() => handleClick(3)}>
+    {!!board[3] ? board[3] : ''}
+  </button>
+  <button class="square" on:click={() => handleClick(4)}>
+    {!!board[4] ? board[4] : ''}
+  </button>
+  <button class="square" on:click={() => handleClick(5)}>
+    {!!board[5] ? board[5] : ''}
+  </button>
+</div>
+<div class="row">
+  <button class="square" on:click={() => handleClick(6)}>
+    {!!board[6] ? board[6] : ''}
+  </button>
+  <button class="square" on:click={() => handleClick(7)}>
+    {!!board[7] ? board[7] : ''}
+  </button>
+  <button class="square" on:click={() => handleClick(8)}>
+    {!!board[8] ? board[8] : ''}
+  </button>
+</div>
+```
 
+This is quite tedious, but we'll come up with a nicer solution later on.
+
+We'll now focus on change the `board` with the click handler.
 
 ```
+  function handleClick(i) {
+    // set the symbol of the "current" player on the board
+    board[i] = nextPlayer;
+
+    // alternate between players
+    nextPlayer = nextPlayer === "x" ? "o" : "x";
+  }
+```
+
+This already gives us a fully working Tic Tac Toe Board!
+
+Now let's make the markup of the board a bit more flexible. We'll introduce a `rows` variable in the script section to get this done:
+
+```svelte
+  // split the board into columns to render them
+  const rows = [[0, 1, 2], [3, 4, 5], [6, 7, 8]];
+```
+
+In the markup we iterate over the rows and sqaures. We can use the `#each` tag to do this:
+
+```svelte
+{#each rows as row}
+  <div class="row">
+    {#each row as index}
+      <button class="square" on:click={() => handleClick(index)}>
+        {!!board[index] ? board[index] : '  '}
+      </button>
+    {/each}
+  </div>
+{/each}
+```
+
+### Winning Condition
+
+One of the problems our game still has is that you can continue after a player has won. That's because we didn't implement any winning condition yet. So let's do this now.
+
+We have to check after every move, if the winning condition is met. So we'll add this to the `handleClick` function and implement the `checkWinningCondition` function.
+
+But let's start with defining the winning conditions themselves:
+
+```svelte
+const possibleWinningCombinations = [
+  // rows
+  [0, 1, 2],
+  [3, 4, 5],
+  [6, 7, 8],
+  // columns
+  [0, 3, 6],
+  [1, 4, 7],
+  [2, 5, 8],
+  // diagonals
+  [0, 4, 8],
+  [6, 4, 2]
+];
+```
+
+`possibleWinningCombinations` now contains all three in a row combinations by the index of the squares. Let's use this in our `checkWinningConditions` function.
+
+```svelte
+  function checkWinningCondition() {
+    return possibleWinningCombinations
+      .filter(combination => {
+        return (
+          !!board[combination[0]] &&
+          board[combination[0]] === board[combination[1]] &&
+          board[combination[0]] === board[combination[2]]
+        );
+      })
+      // will contain the winning combination or undefined
+      .pop();
+  }
+
+  function handleClick(i) {
+    // set the symbol of the "current" player on the board
+    board[i] = nextPlayer;
+
+    // alternate between players
+    nextPlayer = nextPlayer === "x" ? "o" : "x";
+
+    // and let's output the winning combination if there is any
+    console.log(checkWinningCondition());
+  }
+```
+
+So as soon as you have three in a row the application will not log the winning combination. Quite cool! But let's make this a bit more obvious by highlighting the squares.
 
 ---
 

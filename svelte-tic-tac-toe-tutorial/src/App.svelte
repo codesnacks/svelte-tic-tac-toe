@@ -4,11 +4,43 @@
   // player x is going to start
   let nextPlayer = "x";
 
+  // split the board into columns to render them
+  const rows = [[0, 1, 2], [3, 4, 5], [6, 7, 8]];
+
+  const possibleWinningCombinations = [
+    // rows
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    // columns
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    // diagonals
+    [0, 4, 8],
+    [6, 4, 2]
+  ];
+
+  function checkWinningCondition() {
+    return possibleWinningCombinations
+      .filter(combination => {
+        return (
+          !!board[combination[0]] &&
+          board[combination[0]] === board[combination[1]] &&
+          board[combination[0]] === board[combination[2]]
+        );
+      })
+      .pop();
+  }
+
   function handleClick(i) {
-    console.log("clicked", i);
+    // set the symbol of the "current" player on the board
+    board[i] = nextPlayer;
 
     // alternate between players
     nextPlayer = nextPlayer === "x" ? "o" : "x";
+
+    console.log(checkWinningCondition());
   }
 </script>
 
@@ -37,18 +69,12 @@
   }
 </style>
 
-<div class="row">
-  <button class="square" on:click={() => handleClick(0)} />
-  <button class="square" on:click={() => handleClick(1)} />
-  <button class="square" on:click={() => handleClick(2)} />
-</div>
-<div class="row">
-  <button class="square" on:click={() => handleClick(3)} />
-  <button class="square" on:click={() => handleClick(4)} />
-  <button class="square" on:click={() => handleClick(5)} />
-</div>
-<div class="row">
-  <button class="square" on:click={() => handleClick(6)} />
-  <button class="square" on:click={() => handleClick(7)} />
-  <button class="square" on:click={() => handleClick(8)} />
-</div>
+{#each rows as row}
+  <div class="row">
+    {#each row as index}
+      <button class="square" on:click={() => handleClick(index)}>
+        {!!board[index] ? board[index] : '  '}
+      </button>
+    {/each}
+  </div>
+{/each}
