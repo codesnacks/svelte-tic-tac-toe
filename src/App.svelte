@@ -1,79 +1,90 @@
 <script>
   import { onMount, afterUpdate } from "svelte";
 
-  const initialBoard = Array.from(new Array(9));
-  let board = [...initialBoard];
-  let winningCombination = null;
-
+  // creates an array with 9 undefined entries
+  let board = Array.from(new Array(9));
+  // player x is going to start
   let nextPlayer = "x";
   let winningPlayer = "";
 
   // split the board into columns to render them
   const rows = [[0, 1, 2], [3, 4, 5], [6, 7, 8]];
 
+  const possibleWinningCombinations = [
+    // rows
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    // columns
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    // diagonals
+    [0, 4, 8],
+    [6, 4, 2]
+  ];
+
+  // state that contains the winning combination if one exists
+  let winningCombination;
+
   onMount(() => {
-    try {
-      board =
-        JSON.parse(window.localStorage.getItem("tictactoe")) || initialBoard;
-      getWinner();
-    } catch (e) {}
+    const storedState = JSON.parse(window.localStorage.getItem("tictactoe"));
+
+    board = storedState.board || initialBoard;
+    nextPlayer = storedState.nextPlayer || "x";
+
+    // check if there is already a winner
+    getWinner();
   });
 
   afterUpdate(function() {
-    window.localStorage.setItem("tictactoe", JSON.stringify(board));
+    window.localStorage.setItem(
+      "tictactoe",
+      JSON.stringify({ board, nextPlayer })
+    );
   });
 
+  function checkWinningCondition() {
+    return (
+      possibleWinningCombinations
+        .filter(combination => {
+          return (
+            !!board[combination[0]] &&
+            board[combination[0]] === board[combination[1]] &&
+            board[combination[0]] === board[combination[2]]
+          );
+        })
+        // will contain the winning combination or undefined
+        .pop()
+    );
+  }
+
+  function getWinningPlayer() {
+    return board[winningCombination[0]];
+  }
+
+  function getWinner() {
+    winningCombination = checkWinningCondition();
+
+    if (winningCombination) {
+      winningPlayer = getWinningPlayer();
+    }
+  }
+
   function handleClick(i) {
+    // return if the square at positon i already has a value or the game already has a winner
     if (board[i] || winningCombination) {
       return;
     }
 
+    // set the symbol of the "current" player on the board
     board[i] = nextPlayer;
 
-    // switch player
+    // alternate between players
     nextPlayer = nextPlayer === "x" ? "o" : "x";
 
+    // get the winner and the winning combination
     getWinner();
-  }
-
-  function getWinner() {
-    winningCombination = checkWinningCondition(board);
-
-    if (winningCombination) {
-      winningPlayer = getWinningPlayer(winningCombination, board);
-    }
-  }
-
-  function getWinningPlayer(winningCombination, board) {
-    return board[winningCombination[0]];
-  }
-
-  function checkWinningCondition(board) {
-    const possibleWinningCombinations = [
-      // rows
-      [0, 1, 2],
-      [3, 4, 5],
-      [6, 7, 8],
-      // columns
-      [0, 3, 6],
-      [1, 4, 7],
-      [2, 5, 8],
-      // diagonals
-      [0, 4, 8],
-      [6, 4, 2]
-    ];
-
-    const get = index => board[index];
-
-    return possibleWinningCombinations
-      .filter(combination => {
-        return (
-          !!get(combination[0]) &&
-          get(combination[0]) === get(combination[1]) &&
-          get(combination[0]) === get(combination[2])
-        );
-      })
-      .pop();
   }
 
   function clearState() {
@@ -102,11 +113,6 @@
     text-align: center;
     font-size: 48px;
   }
-  h1 {
-    font-size: 48px;
-    color: #d3d0cb;
-    font-weight: bold;
-  }
   .row {
     height: 45px;
     display: flex;
@@ -119,7 +125,7 @@
     font-size: 24px;
     border: 1px solid #d3d0cb;
   }
-  .winner {
+  .winning-combination {
     background: #6e8898;
   }
 </style>
@@ -135,7 +141,7 @@
   <div class="row">
     {#each row as index}
       <button
-        class="square {!!winningCombination && winningCombination.includes(index) ? 'winner' : ''}"
+        class="square {!!winningCombination && winningCombination.includes(index) ? 'winning-combination' : ''}"
         on:click={() => handleClick(index)}>
         {!!board[index] ? board[index] : '  '}
       </button>
@@ -148,4 +154,6 @@
     winner
     <strong>{winningPlayer}</strong>
   </h1>
+{:else}
+  <h1>no winner yet</h1>
 {/if}
